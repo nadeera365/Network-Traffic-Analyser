@@ -1,0 +1,10 @@
+.csv-picker { padding: 20px; border: 1px dashed #9cbdb4; border-radius: 10px; background: #f7fbf9; }
+.csv-picker input { display: block; width: 100%; min-width: 0; color: #35584e; font: inherit; font-size: 12px; }
+.csv-picker input::file-selector-button { padding: 10px 14px; margin: 4px 12px 4px 0; border: 1px solid #c3d8d1; border-radius: 7px; background: white; color: #176b59; cursor: pointer; }
+.csv-picker input:focus-visible { outline: 3px solid #159c91; outline-offset: 4px; }
+.csv-picker p, .csv-notice, .csv-preview p { color: #58736c; font-size: 11px; line-height: 1.8; margin-top: 12px; overflow-wrap: anywhere; }
+.csv-status { margin-top: 14px; font-size: 12px; font-weight: 600; color: #176b59; overflow-wrap: anywhere; }
+.csv-preview { margin-top: 18px; min-width: 0; }
+.csv-preview summary { cursor: pointer; font-size: 12px; font-weight: 600; }
+.csv-preview .table-scroll { margin-top: 12px; }
+@media (max-width: 700px) { .csv-picker { padding: 14px; } .csv-picker input { font-size: 12px; } .csv-preview th, .csv-preview td { padding: 11px 9px; } }

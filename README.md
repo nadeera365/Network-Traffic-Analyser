@@ -1,4 +1,4 @@
-# NetGuard AI
+# Network Traffic Analyser
 
 An explainable hybrid machine learning system for network intrusion and unknown attack detection.
 
