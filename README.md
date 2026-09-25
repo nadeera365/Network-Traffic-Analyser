@@ -72,23 +72,52 @@ Reuse the existing virtual environment if it is already working.
 
 For a reproducible setup, requirements.txt must contain the dependencies and versions from the working training/API environment. A clean-machine installation has not yet been verified. Do not upgrade ML dependencies without checking model compatibility.
 
-### 2. Dataset and models
+### 2. Download assets or reproduce training
 
-For analysis or retraining, place these files in data/raw/:
+Source code is stored in GitHub. Large datasets and fitted model artifacts are distributed separately.
 
-- UNSW_NB15_training-set.csv
-- UNSW_NB15_testing-set.csv
+**Release links are pending.** The maintainer must replace the two placeholders below with working, viewer-access Google Drive links before sharing this as a ready-to-run release.
 
-Place the three saved artifacts shown in the directory tree in models/. Each artifact includes its fitted pipeline and expected input columns. Binary and anomaly artifacts also store thresholds.
+| Download | Link | Needed for |
+| --- | --- | --- |
+| Three fitted model artifacts | https://drive.google.com/drive/folders/1JWb_GVjE-Npj8wqUBdktuuluADuZyfeB?usp=sharing | Running the API without training |
+| Original training and testing CSV files | https://drive.google.com/drive/folders/1JWb_GVjE-Npj8wqUBdktuuluADuZyfeB?usp=sharing | Notebooks and retraining |
 
-If model artifacts are unavailable, reproduce the training/export steps in order:
+Official dataset source and attribution: [UNSW-NB15, UNSW Research](https://research.unsw.edu.au/projects/unsw-nb15-dataset). Use the original named training/testing split used in this project, not a re-extracted or extended version. Follow the provider's usage and citation conditions.
 
-1. notebooks/01_data_understanding.ipynb
-2. notebooks/02_binary_preprocessing.ipynb
-3. notebooks/03_attack_category_classification.ipynb
-4. notebooks/04_anomaly_detection.ipynb
+#### Option A — Run the existing trained application
 
-All three artifacts are required for backend startup. Only load trusted joblib files; model uploads from users are not supported.
+Download these exact files into the project-root models/ directory:
+
+- models/binary_rf_baseline.joblib
+- models/attack_category_rf.joblib
+- models/anomaly_isolation_forest.joblib
+
+Download the actual files, not a Google Drive preview webpage. Avoid an extra nested models/models/ folder after extraction. All three files must come from the same project release. They contain fitted preprocessing pipelines and metadata, not just standalone estimators.
+
+The full training dataset is not required for API startup. You still need a compatible input CSV containing 1–100 rows to use the interface.
+
+Only load model artifacts obtained from a trusted source. joblib/pickle-based loading can execute code. Keep the dependency versions used when these artifacts were saved; cross-version scikit-learn loading is unsupported.
+
+#### Option B — Study or regenerate the models
+
+Download the original CSVs into:
+
+- data/raw/UNSW_NB15_training-set.csv
+- data/raw/UNSW_NB15_testing-set.csv
+
+The expected shapes are (175341, 45) and (82332, 45), respectively.
+
+Open the notebooks with the project .venv selected as the Jupyter kernel. Run cells in order. Actual tracked notebook filenames are:
+
+1. notebooks/data_understanding.ipynb
+2. notebooks/binary_preprocessing.ipynb
+3. notebooks/AttackCat_Classification.ipynb
+4. notebooks/anomaly_detection.ipynb
+
+Run each model notebook through its export cells and confirm that the three expected model files exist. Notebook execution from a fresh kernel and clean-machine reproducibility have not yet been independently verified. If a notebook depends on variables from another session, make its loading/setup cells explicit before claiming reproducibility.
+
+Keep data and fitted artifacts out of the source repository unless intentionally publishing them through a suitable release mechanism.
 
 ### 3. Start the backend
 
@@ -113,11 +142,9 @@ In a separate terminal:
 
 Use npm install instead of npm ci if no package-lock.json exists.
 
-When installing the file-import updates for the first time, add their dependencies and retain the updated package.json and lockfile:
+Papa Parse must already be declared in frontend/package.json and package-lock.json. A normal checkout should install dependencies with npm ci without manually adding packages.
 
-    npm install papaparse@5.7.0
-
-Open http://127.0.0.1:5173.
+Open the local URL printed by Vite (normally http://localhost:5173). If that port is occupied, use the actual printed port.
 
 The Vite development proxy forwards /api requests to http://127.0.0.1:8000 and removes the /api prefix. Production hosting requires its own routing configuration.
 
@@ -134,6 +161,21 @@ From frontend/:
     npm run build
 
 These commands describe the verification workflow; not all current repository checks have been independently rerun.
+
+## Troubleshooting
+
+| Symptom | Check or fix |
+| --- | --- |
+| No module named pandas | Use .\\.venv\\Scripts\\python.exe and install requirements with that same interpreter. |
+| Notebook imports fail | Select the project .venv kernel and run setup cells first. |
+| Cannot find check_api.py | Run the command from the project root, not its parent directory. |
+| Model file not found | Check all three filenames and the models/ folder location. |
+| Model compatibility warning | Restore the training dependency versions or retrain and re-export all artifacts. |
+| Frontend API request failed | Keep backend running on port 8000; check /health and the Vite /api proxy. |
+| HTTP 422 | Check the required feature schema, types, and the 1–100 record batch limit. |
+| HTTP 413 | Reduce the request; actual body and file limits are 1 MiB. |
+| HTTP 503 | A prediction is already running; wait and retry. |
+| Attack prediction for a known Normal row | A valid input can still be a false positive. This is a model error, not automatically an upload error. |
 
 ## Usage and input format
 
@@ -381,3 +423,14 @@ Authentication, authorization, production rate limiting, HTTPS/reverse-proxy con
 Dataset: UNSW-NB15. Consult the dataset provider's official documentation for feature definitions, attribution and usage conditions.
 
 Developed by Nadeera Shasika as an AI/ML portfolio project.
+
+## Release checklist for the maintainer
+
+- Replace both pending Drive links and verify access in a signed-out browser.
+- Confirm models match this source revision and the documented thresholds.
+- Pin the Python environment used to train/save the artifacts; retain the frontend lockfile.
+- Inspect notebooks for private paths, tokens, credentials and unnecessary outputs before public sharing.
+- Provide a small compatible sample CSV (no more than 100 records) with its source and purpose documented.
+- Test the full download/install/start/predict workflow from a clean checkout.
+- Record model SHA-256 checksums if distributing a release; checksums detect file changes but do not establish who created a model.
+- Do not describe the release as reproducible or production-ready until the relevant checks pass.
